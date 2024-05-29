@@ -37,6 +37,8 @@ const props = defineProps({
   transaction: Object,
 });
 
+const emit = defineEmits(["deleted"]);
+
 const isLoading = ref(false);
 const toast = useToast();
 const supabase = useSupabaseClient();
@@ -60,13 +62,14 @@ const deleteTransaction = async (id) => {
     toast.add({
       title: "Deleted succesfully",
       icon: "i-heroicons-check-circle",
-      color: 'green'
+      color: "green",
     });
+    emit("deleted", props.transaction.id);
   } catch (e) {
     toast.add({
-      title: "There is something wrong...",
+      title: e,
       icon: "i-heroicons-exclamation-circle",
-      color: 'red'
+      color: "red",
     });
   } finally {
     isLoading.value = false;

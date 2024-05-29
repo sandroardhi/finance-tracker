@@ -22,44 +22,55 @@
         title="Income"
         :amount="4000"
         :last-amount="3000"
-        :loading="false"
+        :loading="isLoading"
       />
       <Trend
         color="red"
         title="Expense"
         :amount="4000"
         :last-amount="13000"
-        :loading="false"
+        :loading="isLoading"
       />
       <Trend
         color="green"
         title="Investments"
         :amount="7000"
         :last-amount="4000"
-        :loading="false"
+        :loading="isLoading"
       />
       <Trend
         color="green"
         title="Saving"
         :amount="4000"
         :last-amount="3000"
-        :loading="false"
+        :loading="isLoading"
       />
     </section>
 
-    <section>
+    <section v-if="!isLoading">
       <div
         v-for="(transactionOnThisDay, date) in transactionsGroupedByDate"
         :key="date"
         class="mb-10"
       >
-        <DailyTransactionSummary :date="date" :transactions="transactionOnThisDay"/>
+        <DailyTransactionSummary
+          :date="date"
+          :transactions="transactionOnThisDay"
+        />
+        <!-- 
+          @deleted="fetchTransaction"
+          is handling emitted event from the child component (Transaction component), the "deleted" is the name of the emitted function
+         -->
         <Transaction
           v-for="transaction in transactionOnThisDay"
           :key="transaction.id"
           :transaction="transaction"
+          @deleted="refreshTransactions()"
         />
       </div>
+    </section>
+    <section v-else>
+      <USkeleton class="h-8 w-full mb-2" v-for="i in 4" :key="i"/>
     </section>
   </main>
 </template>
@@ -71,16 +82,35 @@ const selectedView = ref(transactionViewOptions[1]);
 const supabase = useSupabaseClient();
 
 const transactions = ref([]);
+const isLoading = ref(false);
+const toast = useToast();
 
-const { data, pending } = await useAsyncData("transactions", async () => {
-  const { data, error } = await supabase.from("transactions").select();
+const fetchTransactions = async () => {
+  isLoading.value = true;
+  try {
+    const { data } = await useAsyncData("transactions", async () => {
+      const { data, error } = await supabase.from("transactions").select();
 
-  if (error) return [];
+      if (error) return [];
 
-  return data;
-});
+      return data;
+    });
 
-transactions.value = data.value;
+    return data.value
+  } catch (error) {
+    toast.add({
+      title: error,
+      icon: "i-heroicons-exclamation-circle",
+      color: "red",
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const refreshTransactions = async () => transactions.value = await fetchTransactions()
+
+transactions.value = await fetchTransactions()
 
 const transactionsGroupedByDate = computed(() => {
   let grouped = {};
