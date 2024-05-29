@@ -20,14 +20,14 @@
       <Trend
         color="green"
         title="Income"
-        :amount="4000"
+        :amount="incomeSum"
         :last-amount="3000"
         :loading="isLoading"
       />
       <Trend
         color="red"
         title="Expense"
-        :amount="4000"
+        :amount="expenseSum"
         :last-amount="13000"
         :loading="isLoading"
       />
@@ -45,6 +45,16 @@
         :last-amount="3000"
         :loading="isLoading"
       />
+    </section>
+
+    <section class="flex justify-between items-center mb-10">
+        <div>
+          <h2 class="text-2xl font-extrabold">Transactions</h2>
+          <p class="text-gray-500 dark:text-gray-400">You have {{ incomeCount }} incomes and {{ expenseCount }} expenses this period</p>
+        </div>
+        <div>
+          <UButton icon="i-heroicons-plus-circle" color="white" variant="solid" label="Add"/>
+        </div>
     </section>
 
     <section v-if="!isLoading">
@@ -84,6 +94,30 @@ const supabase = useSupabaseClient();
 const transactions = ref([]);
 const isLoading = ref(false);
 const toast = useToast();
+
+const income = computed (
+  () => transactions.value.filter(t => t.type === 'Income')
+)
+const incomeCount = computed (
+  () => income.value.length
+)
+const incomeSum = computed (
+  // reduce function returns one element from an array, 
+  // (sum, transaction =>, the first param is the accumulator, think of it as the variable that will be returned (i think so, idk if this is right), we need to get it a default value (notice the 0 at the end of the callback function)
+  // the second param is the current element, which is the individual object of income array
+  () => income.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+)
+
+const expense = computed (
+  () => transactions.value.filter(t => t.type === 'Expense')
+)
+const expenseCount = computed (
+  () => expense.value.length
+)
+const expenseSum = computed (
+  () => expense.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+)
+
 
 const fetchTransactions = async () => {
   isLoading.value = true;
