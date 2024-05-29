@@ -43,16 +43,23 @@
         title="Saving"
         :amount="4000"
         :last-amount="3000"
-        :loading="true"
+        :loading="false"
       />
     </section>
 
     <section>
-      <Transaction
-        v-for="transaction in transactions"
-        :key="transaction.id"
-        :transaction="transaction"
-      />
+      <div
+        v-for="(transactionOnThisDay, date) in transactionsGroupedByDate"
+        :key="date"
+        class="mb-10"
+      >
+        <DailyTransactionSummary :date="date" :transactions="transactionOnThisDay"/>
+        <Transaction
+          v-for="transaction in transactionOnThisDay"
+          :key="transaction.id"
+          :transaction="transaction"
+        />
+      </div>
     </section>
   </main>
 </template>
@@ -61,19 +68,34 @@
 import { transactionViewOptions } from "~/constants";
 const selectedView = ref(transactionViewOptions[1]);
 
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient();
 
-const transactions = ref([])
+const transactions = ref([]);
 
-const { data, pending } = await useAsyncData('transactions', async () => {
-  const {data, error} = await supabase.from('transactions').select()
+const { data, pending } = await useAsyncData("transactions", async () => {
+  const { data, error } = await supabase.from("transactions").select();
 
-  if (error) return []
+  if (error) return [];
 
-  return data
-})
+  return data;
+});
 
-transactions.value = data.value
+transactions.value = data.value;
+
+const transactionsGroupedByDate = computed(() => {
+  let grouped = {};
+
+  for (const transaction of transactions.value) {
+    const date = new Date(transaction.created_at).toISOString().split("T")[0];
+
+    if (!grouped[date]) {
+      grouped[date] = [];
+    }
+    grouped[date].push(transaction);
+  }
+
+  return grouped;
+});
 </script>
 
 <style></style>
