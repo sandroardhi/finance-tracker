@@ -53,7 +53,9 @@
           <p class="text-gray-500 dark:text-gray-400">You have {{ incomeCount }} incomes and {{ expenseCount }} expenses this period</p>
         </div>
         <div>
-          <UButton icon="i-heroicons-plus-circle" color="white" variant="solid" label="Add"/>
+          <UButton icon="i-heroicons-plus-circle" color="white" variant="solid" label="Add" @click="isOpen = true"/>
+          <!-- modal form -->
+          <TransactionModal v-model="isOpen"/>
         </div>
     </section>
 
@@ -94,6 +96,7 @@ const supabase = useSupabaseClient();
 const transactions = ref([]);
 const isLoading = ref(false);
 const toast = useToast();
+const isOpen = ref(false)
 
 const income = computed (
   () => transactions.value.filter(t => t.type === 'Income')
@@ -108,7 +111,7 @@ const incomeSum = computed (
   () => income.value.reduce((sum, transaction) => sum + transaction.amount, 0)
 )
 
-const expense = computed (
+const expense = computed(
   () => transactions.value.filter(t => t.type === 'Expense')
 )
 const expenseCount = computed (
