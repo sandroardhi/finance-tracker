@@ -21,8 +21,8 @@
       <template #header> Email has been sent! </template>
 
       <div class="text-center">
-        <p class="text-xl">We have sent an email for <span class="font-extrabold">{{email}}. </span>Check your email and click on the link to sign-in</p>
-        <p>
+        <p class="text-xl mb-5">We have sent an email for <span class="font-extrabold">{{email}}. </span>Check your email and click on the link to sign-in.</p>
+        <p class="text-sm">
           <strong>Important: </strong> The link will expire in 5 minutes.
         </p>
       </div>
@@ -37,6 +37,9 @@ const pending = ref(false)
 const toast = useToast()
 const supabase = useSupabaseClient()
 
+useRedirectIfAuthenticated()
+
+
 const handleLogin = async () => {
   pending.value = true
 
@@ -44,7 +47,7 @@ const handleLogin = async () => {
     const {error}  = await supabase.auth.signInWithOtp({
       email: email.value,
       options: {
-        emailRedirectTo: 'http://localhost:3000'
+        emailRedirectTo: 'http://localhost:3000/confirm'
       }
     })
     if(error) {
