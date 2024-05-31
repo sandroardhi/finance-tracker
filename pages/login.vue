@@ -34,7 +34,7 @@
 const email = ref(undefined);
 const success = ref(false);
 const pending = ref(false)
-const toast = useToast()
+const {toastError, toastSuccess} = useAppToast()
 const supabase = useSupabaseClient()
 
 useRedirectIfAuthenticated()
@@ -51,11 +51,9 @@ const handleLogin = async () => {
       }
     })
     if(error) {
-      toast.add({
+      toastError({
         title: 'Error authenticating',
         description: error.message,
-        icon: 'i-hericons-exclamation-circle',
-        color:'red'
       })
     } else {
       success.value = true

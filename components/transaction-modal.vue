@@ -76,7 +76,7 @@ import { z } from "zod";
 const form = ref();
 const isLoading = ref(false);
 const supabase = useSupabaseClient();
-const toast = useToast();
+const {toastError, toastSuccess} = useAppToast();
 
 const emit = defineEmits(["inserted"]);
 const initialState = {
@@ -136,10 +136,8 @@ const save = async () => {
       .upsert({ ...state.value });
 
     if (!error) {
-      toast.add({
+      toastSuccess({
         title: "Transaction saved succesfully",
-        icon: "i-heroicons-check-circle",
-        color: "green",
       });
       emit("inserted");
       return;
@@ -147,11 +145,9 @@ const save = async () => {
 
     throw error
   } catch (error) {
-    toast.add({
+    toastError({
       title: "Transaction not saved",
       description: error.message,
-      icon: "i-heroicons-exclamation-circle",
-      color: "red",
     });
   } finally {
     isLoading.value = false;

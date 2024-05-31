@@ -103,7 +103,7 @@
 import { transactionPeriodOptions } from "~/constants";
 const selectedPeriod = ref(transactionPeriodOptions[1]);
 
-const toast = useToast();
+const {toastError, toastSuccess} = useAppToast();
 
 // const isOpen = ref(false);
 const { current, previous } = useSelectedTimePeriod(selectedPeriod);
