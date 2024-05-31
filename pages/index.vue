@@ -48,15 +48,24 @@
     </section>
 
     <section class="flex justify-between items-center mb-10">
-        <div>
-          <h2 class="text-2xl font-extrabold">Transactions</h2>
-          <p class="text-gray-500 dark:text-gray-400">You have {{ incomeCount }} incomes and {{ expenseCount }} expenses this period</p>
-        </div>
-        <div>
-          <UButton icon="i-heroicons-plus-circle" color="white" variant="solid" label="Add" @click="isOpen = true"/>
-          <!-- modal form -->
-          <TransactionModal v-model="isOpen"/>
-        </div>
+      <div>
+        <h2 class="text-2xl font-extrabold">Transactions</h2>
+        <p class="text-gray-500 dark:text-gray-400">
+          You have {{ incomeCount }} incomes and {{ expenseCount }} expenses
+          this period
+        </p>
+      </div>
+      <div>
+        <UButton
+          icon="i-heroicons-plus-circle"
+          color="white"
+          variant="solid"
+          label="Add"
+          @click="isOpen = true"
+        />
+        <!-- modal form -->
+        <TransactionModal v-model="isOpen" @inserted="refreshTransactions()" />
+      </div>
     </section>
 
     <section v-if="!isLoading">
@@ -82,7 +91,7 @@
       </div>
     </section>
     <section v-else>
-      <USkeleton class="h-8 w-full mb-2" v-for="i in 4" :key="i"/>
+      <USkeleton class="h-8 w-full mb-2" v-for="i in 4" :key="i" />
     </section>
   </main>
 </template>
@@ -96,44 +105,42 @@ const supabase = useSupabaseClient();
 const transactions = ref([]);
 const isLoading = ref(false);
 const toast = useToast();
-const isOpen = ref(false)
+const isOpen = ref(false);
 
-const income = computed (
-  () => transactions.value.filter(t => t.type === 'Income')
-)
-const incomeCount = computed (
-  () => income.value.length
-)
-const incomeSum = computed (
-  // reduce function returns one element from an array, 
+const income = computed(() =>
+  transactions.value.filter((t) => t.type === "Income")
+);
+const incomeCount = computed(() => income.value.length);
+const incomeSum = computed(
+  // reduce function returns one element from an array,
   // (sum, transaction =>, the first param is the accumulator, think of it as the variable that will be returned (i think so, idk if this is right), we need to get it a default value (notice the 0 at the end of the callback function)
   // the second param is the current element, which is the individual object of income array
   () => income.value.reduce((sum, transaction) => sum + transaction.amount, 0)
-)
+);
 
-const expense = computed(
-  () => transactions.value.filter(t => t.type === 'Expense')
-)
-const expenseCount = computed (
-  () => expense.value.length
-)
-const expenseSum = computed (
-  () => expense.value.reduce((sum, transaction) => sum + transaction.amount, 0)
-)
-
+const expense = computed(() =>
+  transactions.value.filter((t) => t.type === "Expense")
+);
+const expenseCount = computed(() => expense.value.length);
+const expenseSum = computed(() =>
+  expense.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+);
 
 const fetchTransactions = async () => {
   isLoading.value = true;
   try {
     const { data } = await useAsyncData("transactions", async () => {
-      const { data, error } = await supabase.from("transactions").select().order('created_at', {ascending: false});
+      const { data, error } = await supabase
+        .from("transactions")
+        .select()
+        .order("created_at", { ascending: false });
 
       if (error) return [];
 
       return data;
     });
 
-    return data.value
+    return data.value;
   } catch (error) {
     toast.add({
       title: error,
@@ -145,9 +152,15 @@ const fetchTransactions = async () => {
   }
 };
 
-const refreshTransactions = async () => transactions.value = await fetchTransactions()
+const refreshTransactions = async () => {
+  const fetchedTransactions = await fetchTransactions();
+  if (fetchedTransactions) {
+    transactions.value = fetchedTransactions;
+  }
+  isOpen.value = false;
+};
 
-transactions.value = await fetchTransactions()
+transactions.value = await fetchTransactions();
 
 const transactionsGroupedByDate = computed(() => {
   let grouped = {};

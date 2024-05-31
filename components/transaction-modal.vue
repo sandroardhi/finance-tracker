@@ -5,12 +5,7 @@
         <template #header> Add Transaction </template>
 
         <!-- :state="state" is only for the validation -->
-        <UForm
-          :state="state"
-          :schema="schema"
-          ref="form"
-          @submit.prevent="save"
-        >
+        <UForm :state="state" :schema="schema" ref="form" @submit="save">
           <UFormGroup label="Transction Type" required name="type" class="mb-4">
             <USelect
               v-model="state.type"
@@ -35,7 +30,7 @@
           >
             <UInput
               type="date"
-              v-model="state.date"
+              v-model="state.created_at"
               icon="i-heroicons-calendar-days-20-solid"
             />
           </UFormGroup>
@@ -61,7 +56,13 @@
               :options="categories"
             />
           </UFormGroup>
-          <UButton label="Save" type="submit" color="black" variant="solid" />
+          <UButton
+            :loading="isLoading"
+            label="Save"
+            type="submit"
+            color="black"
+            variant="solid"
+          />
         </UForm>
       </UCard>
     </UModal>
@@ -73,7 +74,11 @@ import { categories, transactionTypes } from "~/constants.js";
 import { z } from "zod";
 
 const form = ref();
+const isLoading = ref(false);
+const supabase = useSupabaseClient();
+const toast = useToast();
 
+const emit = defineEmits(["inserted"]);
 const initialState = {
   type: undefined,
   amount: 0,
@@ -82,12 +87,12 @@ const initialState = {
   category: undefined,
 };
 const state = ref({
-  ...initialState
+  ...initialState,
 });
 const resetForm = () => {
-  Object.assign(state.value, initialState)
-  form.value.clear()
-}
+  Object.assign(state.value, initialState);
+  form.value.clear();
+};
 
 const defaultSchema = z.object({
   amount: z.number().positive("Amount cant be below 0"),
@@ -121,21 +126,46 @@ const schema = z.intersection(
 );
 
 const save = async () => {
-  if (form.value.error.length) return
-  
-  // store to supabase
-};
+  if (form.value.errors.length) return;
 
+  // store to supabase
+  isLoading.value = true;
+  try {
+    const { error } = await supabase
+      .from("transactions")
+      .upsert({ ...state.value });
+
+    if (!error) {
+      toast.add({
+        title: "Transaction saved succesfully",
+        icon: "i-heroicons-check-circle",
+        color: "green",
+      });
+      emit("inserted");
+      retrun;
+    } 
+    
+    throw error
+  } catch (error) {
+    toast.add({
+      title: "Transaction not saved",
+      description: error.message,
+      icon: "i-heroicons-exclamation-circle",
+      color: "red",
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // defineModel is a way to declare a two way data binding props for children and its parent.
 // lapo o kok gak nggae props ae? isOpen e dikirim teko parent. well, props iku read only, so isOpen e mek isok di open tok gaisok di close wkakaka
 const isOpen = defineModel();
 watch(isOpen, () => {
-  if(!isOpen.value) {
-    resetForm()
+  if (!isOpen.value) {
+    resetForm();
   }
-})
-
+});
 </script>
 
 <style></style>
