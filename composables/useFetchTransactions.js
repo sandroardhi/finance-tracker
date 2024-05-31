@@ -1,4 +1,4 @@
-export const useFetchTransactions = () => {
+export const useFetchTransactions = (period) => {
   const supabase = useSupabaseClient();
   const transactions = ref([]);
   const pending = ref(false);
@@ -26,50 +26,60 @@ export const useFetchTransactions = () => {
   const fetchTransactions = async () => {
     pending.value = true;
     try {
-      const { data } = await useAsyncData("transactions", async () => {
-        const { data, error } = await supabase
-          .from("transactions")
-          .select()
-          .order("created_at", { ascending: false });
+      const { data } = await useAsyncData(
+        `transactions-${period.value.to.toDateString()}-${period.value.from.toDateString()}`,
+        async () => {
+          const { data, error } = await supabase
+            .from("transactions")
+            .select()
+            // gte iku greater then or equal
+            // lte iku lesser then or equal, function postgreSQL
+            .gte("created_at", period.value.from.toISOString())
+            .lte("created_at", period.value.to.toISOString())
+            .order("created_at", { ascending: false });
 
-        if (error) return [];
+          if (error) return [];
 
-        return data;
-      });
+          return data;
+        }
+      );
 
       return data.value;
-
-    } catch (error) {
-      toast.add({
-        title: error,
-        icon: "i-heroicons-exclamation-circle",
-        color: "red",
-      });
     } finally {
       pending.value = false;
     }
   };
 
   const refresh = async () => {
-    const fetchedTransactions = await fetchTransactions();
-    if (fetchedTransactions) {
-      transactions.value = fetchedTransactions;
-    }
     isOpen.value = false;
+    
+    return transactions.value = await fetchTransactions();
   };
-  
+
+  watch(period, async () => await refresh());
+  // watch(period, async (previousValue, currentValue) => {
+  //   if (
+  //     previousValue.from.toISOString() === currentValue.from.toISOString() &&
+  //     previousValue.to.toISOString() === currentValue.to.toISOString()
+  //   ) {
+  //     return;
+  //   }
+    
+  //   await refresh();
+  // });
+
   const transactionsGroupedByDate = computed(() => {
     let grouped = {};
-  
+
     for (const transaction of transactions.value) {
       const date = new Date(transaction.created_at).toISOString().split("T")[0];
-  
+
       if (!grouped[date]) {
         grouped[date] = [];
       }
       grouped[date].push(transaction);
     }
-  
+
     return grouped;
   });
 
@@ -77,17 +87,17 @@ export const useFetchTransactions = () => {
     transactions: {
       all: transactions,
       grouped: {
-        byDate: transactionsGroupedByDate
+        byDate: transactionsGroupedByDate,
       },
       income,
       expense,
       incomeCount,
       expenseCount,
       incomeSum,
-      expenseSum
+      expenseSum,
     },
     refresh,
     pending,
-    isOpen
-  }
+    isOpen,
+  };
 };

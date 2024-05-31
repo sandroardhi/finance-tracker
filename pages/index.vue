@@ -5,12 +5,15 @@
         <h1 class="text-4xl font-extrabold">Hello, Sandro.</h1>
         <p class="text-base">
           These are your
-          <span class="lowercase">{{ selectedView }}</span> summary
+          <span class="lowercase">{{ selectedPeriod }}</span> summary
         </p>
       </div>
 
       <div>
-        <USelectMenu :options="transactionViewOptions" v-model="selectedView" />
+        <USelectMenu
+          :options="transactionPeriodOptions"
+          v-model="selectedPeriod"
+        />
       </div>
     </section>
 
@@ -21,14 +24,14 @@
         color="green"
         title="Income"
         :amount="incomeSum"
-        :last-amount="3000"
+        :last-amount="prevIncomeTotal"
         :loading="pending"
       />
       <Trend
         color="red"
         title="Expense"
         :amount="expenseSum"
-        :last-amount="13000"
+        :last-amount="prevExpenseTotal"
         :loading="pending"
       />
       <Trend
@@ -97,23 +100,38 @@
 </template>
 
 <script setup>
-import { transactionViewOptions } from "~/constants";
-const selectedView = ref(transactionViewOptions[1]);
+import { transactionPeriodOptions } from "~/constants";
+const selectedPeriod = ref(transactionPeriodOptions[1]);
 
 const toast = useToast();
+
 // const isOpen = ref(false);
+const { current, previous } = useSelectedTimePeriod(selectedPeriod);
 
-const {pending, refresh, isOpen, transactions: {
-  incomeCount,
-  expenseCount,
-  incomeSum,
-  expenseSum,
-  grouped: {
-    byDate
-  }
-}} = useFetchTransactions()
+const {
+  pending,
+  refresh,
+  isOpen,
+  transactions: {
+    incomeCount,
+    expenseCount,
+    incomeSum,
+    expenseSum,
+    grouped: { byDate },
+  },
+} = useFetchTransactions(current);
 
+const {
+  refresh: refreshPrevious, transactions: {
+    // ini diberi alias btw, bukan assign value.
+    incomeSum: prevIncomeTotal,
+    expenseSum: prevExpenseTotal,
+  },
+} = useFetchTransactions(previous);
 await refresh();
+await refreshPrevious()
+
+
 </script>
 
 <style></style>

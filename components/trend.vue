@@ -28,6 +28,9 @@ const props = defineProps({
   loading: Boolean,
 });
 
+// ini kita buat amount nya reactive biar pas si transactions e keupdate, useCurrency e keupdate jg
+const {amount} = toRefs(props)
+
 const trendingUp = computed(() => props.amount >= props.lastAmount);
 
 const icon = computed(() =>
@@ -47,7 +50,10 @@ const percentageTrend = computed(() => {
   return `${Math.ceil(ratio)}%`
 })
 
-const {currency} = useCurrency(props.amount)
+// we cant do it like this, useCurrency emang computed, tapi dengan awakdewe ngirim props.amount seng ga reactive, de e gabakal ngupdate si amount e..
+// so we have to make this props.amount reactive
+// const {currency} = useCurrency(props.amount)
+const {currency} = useCurrency(amount)
 
 </script>
 

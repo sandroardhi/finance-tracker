@@ -142,9 +142,9 @@ const save = async () => {
         color: "green",
       });
       emit("inserted");
-      retrun;
+      return;
     } 
-    
+
     throw error
   } catch (error) {
     toast.add({
