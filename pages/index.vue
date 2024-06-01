@@ -101,7 +101,8 @@
 
 <script setup>
 import { transactionPeriodOptions } from "~/constants";
-const selectedPeriod = ref(transactionPeriodOptions[1]);
+const user = useSupabaseUser()
+const selectedPeriod = ref(user.value.user_metadata?.preferences?.transaction_period ?? transactionPeriodOptions[1]);
 
 const {toastError, toastSuccess} = useAppToast();
 
