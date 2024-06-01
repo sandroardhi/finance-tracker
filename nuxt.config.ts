@@ -8,4 +8,9 @@ export default defineNuxtConfig({
   colorMode: {
     classSuffix: ''
   },
+  runtimeConfig: {
+    pubic: {
+      baseUrl: process.env.BASE_URL ?? 'http://localhost:3000'
+    }
+  }
 })
