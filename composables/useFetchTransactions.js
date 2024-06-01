@@ -23,6 +23,22 @@ export const useFetchTransactions = (period) => {
     expense.value.reduce((sum, transaction) => sum + transaction.amount, 0)
   );
 
+  const saving = computed(() =>
+    transactions.value.filter((t) => t.type === "Saving")
+  );
+  const savingCount = computed(() => saving.value.length);
+  const savingSum = computed(() =>
+    saving.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+  );
+
+  const investment = computed(() =>
+    transactions.value.filter((t) => t.type === "Investment")
+  );
+  const investmentCount = computed(() => investment.value.length);
+  const investmentSum = computed(() =>
+    investment.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+  );
+
   const fetchTransactions = async () => {
     pending.value = true;
     try {
@@ -52,8 +68,8 @@ export const useFetchTransactions = (period) => {
 
   const refresh = async () => {
     isOpen.value = false;
-    
-    return transactions.value = await fetchTransactions();
+
+    return (transactions.value = await fetchTransactions());
   };
 
   watch(period, async () => await refresh());
@@ -64,7 +80,7 @@ export const useFetchTransactions = (period) => {
   //   ) {
   //     return;
   //   }
-    
+
   //   await refresh();
   // });
 
@@ -95,6 +111,8 @@ export const useFetchTransactions = (period) => {
       expenseCount,
       incomeSum,
       expenseSum,
+      investmentSum,
+      savingSum,
     },
     refresh,
     pending,

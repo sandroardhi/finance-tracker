@@ -37,15 +37,15 @@
       <Trend
         color="green"
         title="Investments"
-        :amount="7000"
-        :last-amount="4000"
+        :amount="investmentSum"
+        :last-amount="prevInvestmentTotal"
         :loading="pending"
       />
       <Trend
         color="green"
         title="Saving"
-        :amount="4000"
-        :last-amount="3000"
+        :amount="savingSum"
+        :last-amount="prevSavingTotal"
         :loading="pending"
       />
     </section>
@@ -119,6 +119,8 @@ const {
     expenseCount,
     incomeSum,
     expenseSum,
+    savingSum,
+    investmentSum,
     grouped: { byDate },
   },
 } = useFetchTransactions(current);
@@ -127,6 +129,8 @@ const {
   refresh: refreshPrevious, transactions: {
     // ini diberi alias btw, bukan assign value.
     incomeSum: prevIncomeTotal,
+    savingSum: prevSavingTotal,
+    investmentSum: prevInvestmentTotal,
     expenseSum: prevExpenseTotal,
   },
 } = useFetchTransactions(previous);
