@@ -19,12 +19,26 @@
     <div class="flex justify-end space-x-3 items-center">
       <div>{{ currency }}</div>
       <div>
-        <UDropdown :items="items" :popper="{ placement: 'bottom-start' }">
+        <UDropdown :items="items" :popper="{ placement: 'bottom-start' }" :ui="{item: {base: 'relative'}}">
+          <template #editButton="{ item }">
+            <div @click="editClick" class="absolute w-full h-full top-0 right-0"></div>
+            <div @click="editClick" class="relative text-left flex items-center">
+              <UIcon class="w-5 h-5 text-gray-400 dark:text-gray-500" :name="item.icon" />
+              <p class="truncate font-medium text-gray-900 dark:text-white px-1.5 py-1.5">
+                {{ item.label }}
+              </p>
+            </div>
+          </template>
           <UButton
             color="white"
             variant="ghost"
             trailing-icon="i-heroicons-ellipsis-horizontal"
             :loading="isLoading"
+          />
+          <TransactionModal
+            v-model="isOpen"
+            :transaction="transaction"
+            @inserted="emit('edited')"
           />
         </UDropdown>
       </div>
@@ -37,10 +51,11 @@ const props = defineProps({
   transaction: Object,
 });
 
-const emit = defineEmits(["deleted"]);
+const emit = defineEmits(["deleted", "edited"]);
 
 const isLoading = ref(false);
-const {toastError, toastSuccess} = useAppToast();
+const isOpen = ref(false);
+const { toastError, toastSuccess } = useAppToast();
 const supabase = useSupabaseClient();
 
 const isIncome = computed(() => props.transaction.type === "Income");
@@ -77,6 +92,8 @@ const items = [
     {
       label: "Edit",
       icon: "i-heroicons-pencil-square-20-solid",
+      slot: "editButton",
+      // click: isOpen.value = true,
     },
     {
       label: "Delete",
@@ -85,6 +102,10 @@ const items = [
     },
   ],
 ];
+
+const editClick = () => {
+  isOpen.value = true
+}
 
 const { currency } = useCurrency(props.transaction.amount);
 </script>

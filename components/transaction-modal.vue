@@ -2,12 +2,15 @@
   <div>
     <UModal v-model="isOpen">
       <UCard>
-        <template #header> Add Transaction </template>
+        <template #header>
+          {{ isEditing ? "Edit" : "Add" }} Add Transaction
+        </template>
 
         <!-- :state="state" is only for the validation -->
         <UForm :state="state" :schema="schema" ref="form" @submit="save">
           <UFormGroup label="Transction Type" required name="type" class="mb-4">
             <USelect
+              :disabled="isEditing"
               v-model="state.type"
               placeholder="Select the transaction type"
               :options="transactionTypes"
@@ -76,7 +79,16 @@ import { z } from "zod";
 const form = ref();
 const isLoading = ref(false);
 const supabase = useSupabaseClient();
-const {toastError, toastSuccess} = useAppToast();
+const { toastError, toastSuccess } = useAppToast();
+
+const props = defineProps({
+  transaction: {
+    type: Object,
+    required: false,
+  },
+});
+
+const isEditing = computed(() => !!props.transaction);
 
 const emit = defineEmits(["inserted"]);
 const initialState = {
@@ -86,11 +98,33 @@ const initialState = {
   description: undefined,
   category: undefined,
 };
-const state = ref({
-  ...initialState,
-});
+
+const state = ref(
+  isEditing.value
+    ? {
+        type: props.transaction.type,
+        amount: props.transaction.amount,
+        created_at: props.transaction.created_at.split('T')[0],
+        description: props.transaction.description,
+        category: props.transaction.category,
+      }
+    : {
+        ...initialState,
+      }
+);
 const resetForm = () => {
-  Object.assign(state.value, initialState);
+  Object.assign(
+    state.value,
+    isEditing.value
+      ? {
+          type: props.transaction.type,
+          amount: props.transaction.amount,
+          created_at: props.transaction.created_at.split('T')[0],
+          description: props.transaction.description,
+          category: props.transaction.category,
+        }
+      : initialState
+  );
   form.value.clear();
 };
 
@@ -131,9 +165,12 @@ const save = async () => {
   // store to supabase
   isLoading.value = true;
   try {
-    const { error } = await supabase
-      .from("transactions")
-      .upsert({ ...state.value });
+    const { error } = await supabase.from("transactions").upsert({
+      ...state.value,
+      // di supabase, upsert itu bisa ngerangkap jadi update/insert sesuai dg param/data yg diberi
+      // kalo gaada id, dia bakal bikin record baru, kalo ada dia bakal ngupdate sesuai id nya. nah ini kita check aja ada transaction g di props yg dikirm? kalo ga adaa berarti ini value id nya bakal undefined dan upsert nya jadi insert aja
+      id: props.transaction?.id,
+    });
 
     if (!error) {
       toastSuccess({
@@ -141,9 +178,9 @@ const save = async () => {
       });
       emit("inserted");
       return;
-    } 
+    }
 
-    throw error
+    throw error;
   } catch (error) {
     toastError({
       title: "Transaction not saved",
@@ -161,6 +198,7 @@ watch(isOpen, () => {
   if (!isOpen.value) {
     resetForm();
   }
+  console.log(isEditing.value, props.transaction, state.value);
 });
 </script>
 
