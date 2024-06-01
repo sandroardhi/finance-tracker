@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     classSuffix: ''
   },
   runtimeConfig: {
-    pubic: {
+    public: {
       baseUrl: process.env.BASE_URL ?? 'http://localhost:3000'
     }
   }
