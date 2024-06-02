@@ -16,6 +16,10 @@
 
         <UButton :loading="pending" label="Submit" type="submit" color="black" variant="solid" />
       </form>
+
+      <template #footer>
+        <p class="text-sm">ps: the Supabase's Magic Link for those with free plan is capped at 4/hours. Im sorry for the inconvenience.</p>
+      </template>
     </UCard>
     <UCard v-else>
       <template #header> Email has been sent! </template>
